@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+<style>
+  .filter-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    max-width: 800px;
+    margin: 30px auto;
+    transition: transform 0.3s ease;
+  }
+
+  .filter-container:hover {
+    transform: translateY(-5px);
+  }
+
+  .filter-container h2 {
+    color: #fff;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-align: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+  }
+
+  .flash-messages {
+    margin-bottom: 20px;
+  }
+
+  .alert {
+    background: rgba(255, 120, 120, 0.2);
+    border-left: 4px solid rgba(255, 120, 120, 0.8);
+    color: #ffdddd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .filter-form {
+    margin-bottom: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #e2e2ff;
+  }
+
+  .form-group select,
+  .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    appearance: none;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Style for dropdown options */
+  .form-group select option {
+    background-color: #2a2a42;
+    color: #fff;
+    padding: 10px;
+  }
+
+  /* Ensuring dropdown arrow is visible */
+  .form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+  }
+
+  .form-group select:focus,
+  .form-group input:focus {
+    border-color: rgba(78, 78, 240, 0.8);
+    box-shadow: 0 0 0 3px rgba(78, 78, 240, 0.2);
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, rgba(100, 100, 240, 0.8), rgba(65, 105, 255, 0.8));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(78, 78, 240, 0.2);
+    text-align: center;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .btn:hover {
+    background: linear-gradient(135deg, rgba(100, 100, 240, 0.9), rgba(65, 105, 255, 0.9));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(78, 78, 240, 0.3);
+  }
+
+  /* Animation for elements */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .filter-form {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: 0.1s;
+  }
+
+  .action-buttons {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: 0.2s;
+  }
+
+  @media (max-width: 768px) {
+    .filter-container {
+      padding: 20px;
+      margin: 20px 15px;
+    }
+    
+    .filter-form {
+      grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+    }
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
+
+<div class="filter-container">
+    <h2>Filter & Search Data</h2>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <form action="{{ url_for('apply_filter') }}" method="POST" class="filter-form">
+        <div class="form-group">
+            <label for="column">Column</label>
+            <select name="column" id="column" required>
+                <option value="">Select Column</option>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="operation">Operation</label>
+            <select name="operation" id="operation" required>
+                <option value="">Select Operation</option>
+                <option value="equals">Equals</option>
+                <option value="contains">Contains</option>
+                <option value="greater_than">Greater Than</option>
+                <option value="less_than">Less Than</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="value">Value</label>
+            <input type="text" name="value" id="value" required>
+        </div>
+        
+        <button type="submit" class="btn">Apply Filter</button>
+    </form>
+    
+    <div class="action-buttons">
+        <a href="{{ url_for('data_summary') }}" class="btn">Back to Summary</a>
+    </div>
+</div>
+
+{% endblock %}

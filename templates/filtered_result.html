@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+<style>
+  .filtered-result-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    margin: 20px;
+    transition: transform 0.3s ease;
+    max-width: 1200px;
+    margin: 30px auto;
+  }
+
+  .filtered-result-container:hover {
+    transform: translateY(-5px);
+  }
+
+  .filtered-result-container h2 {
+    color: #fff;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-align: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+  }
+
+  .result-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+  }
+
+  .result-stats p {
+    margin: 0;
+    color: #e2e2ff;
+    font-size: 16px;
+  }
+
+  .result-stats strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .table-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 20px 0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .table-container table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-container th {
+    background: rgba(78, 78, 240, 0.2);
+    color: #e2e2ff;
+    font-weight: 500;
+    text-align: left;
+    padding: 12px 15px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    backdrop-filter: blur(5px);
+  }
+
+  .table-container td {
+    padding: 10px 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .table-container tr:hover {
+    background: rgba(78, 78, 240, 0.1);
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+  }
+
+  .action-buttons .btn {
+    background: linear-gradient(135deg, rgba(100, 100, 240, 0.8), rgba(65, 105, 255, 0.8));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(78, 78, 240, 0.2);
+  }
+
+  .action-buttons .btn:hover {
+    background: linear-gradient(135deg, rgba(100, 100, 240, 0.9), rgba(65, 105, 255, 0.9));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(78, 78, 240, 0.3);
+  }
+
+  /* Animation for elements */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-stats {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: 0.1s;
+  }
+
+  .table-container {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: 0.2s;
+  }
+
+  .action-buttons {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: 0.3s;
+  }
+
+  .flash-messages {
+    margin-bottom: 20px;
+  }
+
+  .alert {
+    background: rgba(255, 120, 120, 0.2);
+    border-left: 4px solid rgba(255, 120, 120, 0.8);
+    color: #ffdddd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .filtered-result-container {
+      padding: 20px;
+      margin: 20px 15px;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+    }
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
+
+<div class="filtered-result-container">
+    <h2>Filtered Data Results</h2>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <div class="result-stats">
+        <p>Showing <strong>{{ filtered_count }}</strong> out of <strong>{{ total_count }}</strong> records</p>
+    </div>
+    
+    <div class="table-container">
+        {{ filtered_preview|safe }}
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{{ url_for('filter_search') }}" class="btn">Apply Another Filter</a>
+        <a href="{{ url_for('data_summary') }}" class="btn">Back to Summary</a>
+    </div>
+</div>
+
+{% endblock %}

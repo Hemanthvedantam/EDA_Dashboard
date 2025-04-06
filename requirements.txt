@@ -1,0 +1,7 @@
+Flask==2.3.3
+pandas==2.1.0
+numpy==1.25.2
+matplotlib==3.7.2
+seaborn==0.12.2
+Werkzeug==2.3.7
+nltk==3.8.1

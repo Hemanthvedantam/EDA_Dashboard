@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EDA Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    {% block additional_css %}{% endblock %}
+    <style>
+        /* Additional styles for sidebar animation */
+        .dashboard-container {
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            transition: transform 0.3s ease;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+        
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+        
+        .main-content.expanded {
+            margin-left: 0;
+        }
+        
+        .sidebar-toggle {
+            cursor: pointer;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Chatbot styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .chatbot-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chatbot-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.5);
+        }
+        
+        .chatbot-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .chatbot-button:hover::after {
+            opacity: 1;
+        }
+        
+        .chatbot-icon {
+            color: white;
+            font-size: 24px;
+        }
+        
+        .chatbot-panel {
+            display: none;
+            width: 350px;
+            height: 500px;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            margin-bottom: 16px;
+            overflow: hidden;
+            flex-direction: column;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .chatbot-panel.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .chatbot-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chatbot-header > div:first-child {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chatbot-close {
+            cursor: pointer;
+            font-size: 18px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+        
+        .chatbot-close:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .chatbot-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #f9fafb;
+            scroll-behavior: smooth;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        
+        .chatbot-messages::-webkit-scrollbar-thumb:hover {
+            background: #c1c1c1;
+        }
+        
+        .chatbot-message {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
+            position: relative;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .bot-message {
+            background-color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .bot-message::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-left: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 0 0 0 20px;
+            clip-path: polygon(0 100%, 100% 100%, 100% 0);
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .user-message::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #6366f1;
+            border-radius: 0 0 20px 0;
+            clip-path: polygon(0 0, 0 100%, 100% 100%);
+        }
+        
+        .chatbot-input-container {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            background-color: white;
+            align-items: center;
+        }
+        
+        .chatbot-input {
+            flex-grow: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .chatbot-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        
+        .chatbot-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .chatbot-send {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+        }
+        
+        .chatbot-send:hover {
+            background-color: #4f46e5;
+            transform: scale(1.05);
+        }
+        
+        .chatbot-send:active {
+            transform: scale(0.95);
+        }
+        
+        /* Typing indicator animation */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 10px 12px;
+            background-color: #f3f4f6;
+            border-radius: 16px;
+            align-self: flex-start;
+            margin-top: 4px;
+            width: fit-content;
+        }
+        
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-chart-pie logo" style="color:#6366f1; font-size: 24px;"></i>
+                <h1>EDA Dashboard</h1>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('data_summary') }}" {% if request.endpoint == 'data_summary' %}class="active"{% endif %}>
+                        <i class="fas fa-table"></i>
+                        <span>Data Summary</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('visualizer') }}" {% if request.endpoint == 'visualizer' %}class="active"{% endif %}>
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Visualizations</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('filter_search') }}" {% if request.endpoint == 'filter_search' %}class="active"{% endif %}>
+                        <i class="fas fa-filter"></i>
+                        <span>Filter Data</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('missing_values') }}" {% if request.endpoint == 'missing_values' %}class="active"{% endif %}>
+                        <i class="fas fa-broom"></i>
+                        <span>Missing Values</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('outlier_detector') }}" {% if request.endpoint == 'outlier_detector' %}class="active"{% endif %}>
+                        <i class="fas fa-search"></i>
+                        <span>Outlier Detection</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('statistical_info') }}" {% if request.endpoint == 'statistical_info' %}class="active"{% endif %}>
+                        <i class="fas fa-calculator"></i>
+                        <span>Statistical Info</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('export') }}" {% if request.endpoint == 'export' %}class="active"{% endif %}>
+                        <i class="fas fa-file-export"></i>
+                        <span>Export Data</span>
+                    </a>
+                </li>
+            
+            </ul>
+            
+            <!-- Sidebar toggle button -->
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left" id="toggle-icon"></i>
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <!-- Top Navbar -->
+            <div class="top-navbar">
+                <div class="navbar-title">
+                    <button class="menu-toggle" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+                <div class="navbar-actions">
+                    <button class="tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltip-text">Help</span>
+                    </button>
+                    <button class="tooltip">
+                        <i class="fas fa-cog"></i>
+                        <span class="tooltip-text">Settings</span>
+                    </button>
+                    <button class="tooltip">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="tooltip-text">Profile</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category if category else 'info' }}">
+                    <i class="fas fa-info-circle"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Page Content -->
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Chatbot Component -->
+    <div class="chatbot-container">
+        <div class="chatbot-panel" id="chatbot-panel">
+            <div class="chatbot-header">
+                <div>
+                    <i class="fas fa-robot"></i>
+                    <span>EDA Assistant</span>
+                </div>
+                <div class="chatbot-close" id="chatbot-close">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="chatbot-message bot-message">
+                    Hi there! I'm your EDA Assistant. How can I help you with your data analysis today?
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <input type="text" class="chatbot-input" id="chatbot-input" placeholder="Type your message...">
+                <button class="chatbot-send" id="chatbot-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chatbot-button" id="chatbot-button">
+            <img src="{{ url_for('static', filename='images/chatbot-icon.png') }}" alt="Assistant" width="30" height="30" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🤖</text></svg>';">
+        </div>
+    </div>
+    
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const toggleIcon = document.getElementById('toggle-icon');
+        const menuToggle = document.getElementById('menu-toggle');
+        
+        // Function to toggle sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Change icon based on sidebar state
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('fa-chevron-left');
+                toggleIcon.classList.add('fa-chevron-right');
+            } else {
+                toggleIcon.classList.remove('fa-chevron-right');
+                toggleIcon.classList.add('fa-chevron-left');
+            }
+            
+            // Save state to localStorage
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+        
+        // Add event listener for sidebar toggle button
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        
+        // Mobile menu toggle functionality (existing code)
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+        
+        // Close sidebar when clicking outside on mobile (existing code)
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target) &&
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+        
+        // Load saved state from localStorage on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarState = localStorage.getItem('sidebarCollapsed');
+            
+            if (sidebarState === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                toggleIcon.classList.remove('fa-chevron-left');
+                toggleIcon.classList.add('fa-chevron-right');
+            }
+        });
+        
+        // Chatbot functionality
+        const chatbotButton = document.getElementById('chatbot-button');
+        const chatbotPanel = document.getElementById('chatbot-panel');
+        const chatbotClose = document.getElementById('chatbot-close');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSend = document.getElementById('chatbot-send');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        
+        // Toggle chatbot panel
+        chatbotButton.addEventListener('click', function() {
+            chatbotPanel.classList.toggle('active');
+        });
+        
+        // Close chatbot panel
+        chatbotClose.addEventListener('click', function() {
+            chatbotPanel.classList.remove('active');
+        });
+        
+        // Send message function
+        function sendMessage() {
+            const message = chatbotInput.value.trim();
+            if (message) {
+                // Add user message to chat
+                appendMessage(message, 'user');
+                chatbotInput.value = '';
+                
+                // Simulate bot response (replace with actual API call)
+                setTimeout(() => {
+                    processMessage(message);
+                }, 500);
+            }
+        }
+        
+        // Process message and get response
+        function processMessage(message) {
+            // Example responses based on keywords
+            // In production, replace with API call to backend
+            let response = '';
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                response = "Hello! How can I help with your data analysis today?";
+            } else if (lowerMessage.includes('missing value') || lowerMessage.includes('missing data')) {
+                response = "You can handle missing values on the 'Missing Values' page. Would you like me to navigate you there?";
+            } else if (lowerMessage.includes('outlier')) {
+                response = "For outlier detection and analysis, check the 'Outlier Detection' page. Need help with specific outlier techniques?";
+            } else if (lowerMessage.includes('visualiz')) {
+                response = "Our visualization tools allow you to create various charts. Go to the 'Visualizations' page to explore your data graphically.";
+            } else if (lowerMessage.includes('export') || lowerMessage.includes('download')) {
+                response = "You can export your processed data on the 'Export Data' page in various formats like CSV, Excel, or JSON.";
+            } else if (lowerMessage.includes('statistic')) {
+                response = "For statistical analysis including correlation, distribution tests, and summary statistics, visit the 'Statistical Info' page.";
+            } else {
+                response = "I'm here to help with your EDA tasks. You can ask about visualizations, missing values, outliers, statistics, or any other data analysis questions.";
+            }
+            
+            appendMessage(response, 'bot');
+        }
+        
+        // Append message to chat
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chatbot-message');
+            messageDiv.classList.add(sender + '-message');
+            messageDiv.textContent = text;
+            
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        // Event listeners for sending messages
+        chatbotSend.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+    {% block additional_js %}{% endblock %}
+</body>
+</html>

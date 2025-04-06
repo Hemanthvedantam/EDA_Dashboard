@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}EDA Dashboard - Home{% endblock %}
+
+{% block page_title %}Welcome to EDA Analysis{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<style>
+    /* Page-specific styles for upload page */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-header h3 {
+        margin: 0;
+        font-weight: 600;
+        color: #f8fafc;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .upload-area {
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--primary-light);
+        margin-bottom: 1rem;
+    }
+
+    h3.mb-4 {
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        color: #f8fafc;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .feature-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(5px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .feature-card-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .feature-card h4 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #f8fafc;
+    }
+
+    .feature-card p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="card glass-card">
+    <div class="card-header">
+        <h3>Upload Your Data</h3>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="upload-form">
+            <div class="upload-area" id="drop-area" onclick="document.getElementById('file').click()">
+                <i class="fas fa-file-csv upload-icon"></i>
+                <h4>Drag & Drop or Click to Upload CSV</h4>
+                <p>Supported formats: .csv, .txt</p>
+                <input type="file" name="file" id="file" class="d-none" accept=".csv,.txt" onchange="document.getElementById('upload-form').submit()">
+            </div>
+        </form>
+    </div>
+</div>
+
+<h3 class="mb-4">Available Features</h3>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-table"></i>
+        </div>
+        <h4>Data Summary</h4>
+        <p>View rows, columns, data types, and null values in your dataset</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <h4>Auto Visualizer</h4>
+        <p>Create histograms, bar plots, and correlation heatmaps to understand your data</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-filter"></i>
+        </div>
+        <h4>Filter/Search</h4>
+        <p>View and analyze specific subsets of your data</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-broom"></i>
+        </div>
+        <h4>Missing Value Handler</h4>
+        <p>Drop or fill NA values with various methods</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <h4>Outlier Detector</h4>
+        <p>Visualize and identify outliers using box plots</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <h4>Statistical Info</h4>
+        <p>Calculate mean, median, std dev, skew, kurtosis, and more</p>
+    </div>
+</div>
+
+<script>
+    // Add drag and drop functionality
+    const dropArea = document.getElementById('drop-area');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropArea.style.borderColor = 'var(--primary-color)';
+        dropArea.style.background = 'rgba(99, 102, 241, 0.05)';
+    }
+    
+    function unhighlight() {
+        dropArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        dropArea.style.background = '';
+    }
+    
+    dropArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            document.getElementById('file').files = files;
+            document.getElementById('upload-form').submit();
+        }
+    }
+    
+    // Add float animation to feature cards
+    const featureCards = document.querySelectorAll('.feature-card');
+    
+    featureCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-10px)';
+            card.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.2)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.1)';
+        });
+    });
+    
+    // Animate on page load
+    window.addEventListener('load', () => {
+        featureCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('feature-card-visible');
+            }, 100 * index);
+        });
+    });
+</script>
+{% endblock %}
