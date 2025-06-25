@@ -1,4 +1,4 @@
-<h1 align="center">**📊 Advanced EDA Dashboard**</h1>
+<h1 align="center">📊 Advanced EDA Dashboard</h1>
 
 An intelligent and interactive **EDA Dashboard** that performs complete exploratory data analysis (EDA) from any CSV file. With the help of visualizations, statistical insights, outlier detection, and missing value handling, the dashboard also provides a **cleaned dataset for download** and a **smart chatbot** assistant to guide users.
 
