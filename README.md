@@ -1,4 +1,4 @@
-**📊 Advanced EDA Dashboard**
+<h1 align="center">**📊 Advanced EDA Dashboard**</h1>
 
 An intelligent and interactive **EDA Dashboard** that performs complete exploratory data analysis (EDA) from any CSV file. With the help of visualizations, statistical insights, outlier detection, and missing value handling, the dashboard also provides a **cleaned dataset for download** and a **smart chatbot** assistant to guide users.
 
@@ -9,9 +9,13 @@ An intelligent and interactive **EDA Dashboard** that performs complete explorat
 **🧠 Features**
 
 ✅ Upload any CSV file (small or large datasets)
+
 ✅ Get automatic summary statistics (mean, median, mode, count, etc.)
+
 ✅ Identify and visualize **missing values**
+
 ✅ Detect **outliers** using IQR or Z-score
+
 ✅ Generate:
 
 Histograms
@@ -23,21 +27,28 @@ Box plots
 Pair plots
 
 Aggregated bar/pie charts
+
 ✅ **Fill missing values** (mean, median, mode options)
+
 ✅ **Drop unnecessary columns**
+
 ✅ Download cleaned CSV with one click
+
 ✅ Integrated **AI Chatbot** for:
+
 
 Explaining features
 
 Suggesting improvements
 
 Guiding analysis
+
 ✅ Fast, scalable, responsive UI built using **Flask + Plotly / Seaborn**
 
 **🛠 Tech Stack**
 
 **🐍 Programming Languages**
+
 Python 3.8+
 
 SQL (for data queries)
@@ -81,13 +92,17 @@ pip install virtualenv (optional but recommended)
 **🔧 Local Installation**
 
 # 1. Clone the repo
+
 git clone github.com/Hemanthvedantam/EDA_Dashboard.git
+
 cd eda-dashboard
 
 # 2. Install dependencies
+
 pip install -r requirements.txt
 
 # 3. (Flask version)
+
 python app.py
 
 **🧪 Sample Usage**
